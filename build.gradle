@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+
+
+    // https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core
+    implementation 'com.datastax.oss:java-driver-core:4.14.1'
+    // https://mvnrepository.com/artifact/com.datastax.oss/java-driver-query-builder
+    implementation 'com.datastax.oss:java-driver-query-builder:4.14.1'
+    // https://mvnrepository.com/artifact/com.datastax.oss/java-driver-mapper-runtime
+    implementation 'com.datastax.oss:java-driver-mapper-runtime:4.14.1'
+    implementation 'com.github.javafaker:javafaker:1.0.2'
+}
+
+test {
+    useJUnitPlatform()
+}
