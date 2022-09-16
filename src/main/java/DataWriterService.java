@@ -9,19 +9,22 @@ import java.util.concurrent.CountDownLatch;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
 
+
 public class DataWriterService extends Thread {
     private final CountDownLatch startLatch;
     private final CountDownLatch endLatch;
     private final String name;
-    private CqlSession cqlSession;
+    private final CqlSession cqlSession;
     final Faker faker = new Faker();
 
-    public DataWriterService(String name, CqlSession cqlSession, CountDownLatch startLatch, CountDownLatch endLatch) {
+    public DataWriterService(final String name,
+                             final CqlSession cqlSession,
+                             final CountDownLatch startLatch,
+                             final CountDownLatch endLatch) {
         this.name = name;
         this.cqlSession = cqlSession;
         this.startLatch = startLatch;
         this.endLatch = endLatch;
-
     }
 
     @Override
@@ -32,7 +35,7 @@ public class DataWriterService extends Thread {
             startLatch.countDown();
             startLatch.await();
             System.out.printf("[ %s ] starts at: %s\n", getName(), Instant.now());
-            Insert userInsert = insertInto("dcperf", "users")
+            final Insert userInsert = insertInto("dcperf", "users")
                     .value("userid", literal(Uuids.random()))
                     .value("firstname", literal(faker.name().firstName()))
                     .value("lastname", literal(faker.name().lastName()))
