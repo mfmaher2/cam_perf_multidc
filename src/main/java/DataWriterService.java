@@ -36,14 +36,12 @@ public class DataWriterService extends Thread {
     public void run() {
 
         try {
-            System.out.printf("[ %s ] created writer, blocked by the latch...\n", getName());
             startLatch.countDown();
             final BoundStatement statement = bindStatement(preparedStatement);
             startLatch.await();
             final Instant threadStartTime = Instant.now();
             cqlSession.execute(statement);
             endLatch.countDown();
-
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

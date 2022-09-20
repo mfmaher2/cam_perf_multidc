@@ -16,9 +16,9 @@ public class DataReaderService extends Thread {
     private final String name;
     private final CqlSession cqlSession;
     private final PreparedStatement preparedStatement;
-    private UUID uuid;
+    private final UUID uuid;
     private final Faker faker = new Faker();
-    private Queue<Long> perfQueue;
+    final private Queue<Long> perfQueue;
 
     public DataReaderService(final String name,
                              final CqlSession cqlSession,
@@ -39,27 +39,25 @@ public class DataReaderService extends Thread {
 
     @Override
     public void run() {
-//TODO check if data is read by checking if execute returns a result set
         try {
-            System.out.printf("[ %s ] created reader, blocked by the latch...\n", getName());
             startLatch.countDown();
+            final BoundStatement statement = preparedStatement.bind().setUuid(0, uuid);
             startLatch.await();
             final Instant threadStartTime = Instant.now();
-            // System.out.printf("[ %s ] starts at: %s\n", getName(), threadStartTime);
-
-            final BoundStatement statement = preparedStatement.bind()
-                    .setUuid(0, uuid);
-            cqlSession.execute(statement);
+            while (cqlSession.execute(statement).one() == null) {
+                //Thread.sleep(25);
+                //System.out.println(uuid);
+            }
+            ;//loop until a result is found
             final Instant threadEndTime = Instant.now();
-            //ReadWritePerf readWritePerf = new ReadWritePerf();
-            // readWritePerf.setInstanceName(getName());
-            // readWritePerf.setRunTime(ChronoUnit.MILLIS.between(threadStartTime, threadEndTime));
-            perfQueue.add(ChronoUnit.MILLIS.between(threadStartTime, threadEndTime));
-            System.out.printf("[ %s ] writetime: %s, readtime:  %s, diff:%sms\n", getName(), threadStartTime, Instant.now(), ChronoUnit.MILLIS.between(threadStartTime, threadEndTime));
+            final Long diffTime = ChronoUnit.MILLIS.between(threadStartTime, threadEndTime);
+            perfQueue.add(diffTime);
+            //System.out.printf("[ %s ] writetime: %s, readtime:  %s, diff:%sms\n", getName(), threadStartTime, threadEndTime, diffTime);
             endLatch.countDown();
 
-        } catch (InterruptedException e) {
-            // handle exception
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

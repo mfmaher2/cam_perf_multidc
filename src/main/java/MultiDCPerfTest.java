@@ -8,7 +8,6 @@ import com.datastax.oss.driver.api.querybuilder.insert.Insert;
 
 import java.io.File;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -29,15 +28,15 @@ public class MultiDCPerfTest {
         final CqlSession dc1CqlSession = CqlSession.builder()
                 .withConfigLoader(DriverConfigLoader.fromFile(dc1Config))
                 .build();
-        final File dc2Config = new File("/Users/sjacob/projects/fedex/cam_perf_multidc/src/main/resources/dc2conf");
+        final File dc2Config = new File("/Users/sjacob/projects/fedex/cam_perf_multidc/src/main/resources/dc2.conf");
         final CqlSession dc2CqlSession = CqlSession.builder()
-                .withConfigLoader(DriverConfigLoader.fromFile(dc1Config))
+                .withConfigLoader(DriverConfigLoader.fromFile(dc2Config))
                 .build();
         //truncate table
         dc1CqlSession.execute("TRUNCATE dcperf.users");
         List<UUID> uuidList = new LinkedList<>();
-        final int threadCount = 100;
-        LinkedBlockingDeque<Long> perfTimeQueue = new LinkedBlockingDeque<>(threadCount); //bounded Q
+        final int threadCount = 10;
+        final LinkedBlockingDeque<Long> perfTimeQueue = new LinkedBlockingDeque<>(threadCount); //bounded Q
         final CountDownLatch startLatch = new CountDownLatch(threadCount * 2);
         final CountDownLatch endLatch = new CountDownLatch(threadCount * 2);
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount * 2);
@@ -45,6 +44,7 @@ public class MultiDCPerfTest {
         final PreparedStatement writePreparedStatement = createWritePreparedStatement(keyspace, dc1CqlSession); //cql ps is threadsafe
         final PreparedStatement readPreparedStatement = createReadPreparedStatement(keyspace, dc2CqlSession);
         final Instant startTime = Instant.now();
+        //write threads
         for (int i = 0; i < threadCount; i++) {
             final UUID uuid = Uuids.random();
             uuidList.add(uuid);
@@ -55,7 +55,7 @@ public class MultiDCPerfTest {
                     startLatch,
                     endLatch)));
         }
-        System.out.println("Done with Writer Thread Init");
+        //read threads
         for (int i = 0; i < threadCount; i++) {
             executorService.execute(new Thread(new DataReaderService("DataReader",
                     dc2CqlSession,
@@ -73,14 +73,8 @@ public class MultiDCPerfTest {
             //waiting for all tasks to finish so that we can close cqlSession
             endLatch.await();
             System.out.println("Waiting for tasks to finish..");
-            System.out.println("startime:" + startTime.toString());
-            System.out.println("endtime:" + Instant.now().toString());
-            System.out.println("UUID list:" + uuidList.size());
-            System.out.println("Queue count:" + perfTimeQueue.size());
             Long totalReadWriteTime = perfTimeQueue.stream().reduce(0L, Long::sum);
-            System.out.println("Average perf time:" + totalReadWriteTime / threadCount + "ms");
-
-            System.out.println("Total time in ms:" + ChronoUnit.MILLIS.between(startTime, Instant.now()));
+            System.out.printf("Average per thread write-read latency is %sms, for %s threads\n", (totalReadWriteTime / threadCount), threadCount);
         } catch (
                 Exception ie) {
             ie.printStackTrace();
@@ -105,7 +99,7 @@ public class MultiDCPerfTest {
 
     private static PreparedStatement createReadPreparedStatement(String keyspace, CqlSession session) {
         SimpleStatement simpleStatement =
-                SimpleStatement.builder("SELECT * FROM users WHERE userid = ?").setKeyspace(keyspace).build();
+                SimpleStatement.builder("SELECT userid FROM users WHERE userid=?").setKeyspace(keyspace).build();
         return session.prepare(simpleStatement);
     }
 }
