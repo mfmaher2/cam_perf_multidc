@@ -1,7 +1,8 @@
+package com.fedex.cassandra.perf;
+
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.github.javafaker.Faker;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -13,27 +14,24 @@ import java.util.concurrent.CountDownLatch;
 public class DataReaderService extends Thread {
     private final CountDownLatch startLatch;
     private final CountDownLatch endLatch;
-    private final String name;
     private final CqlSession cqlSession;
     private final PreparedStatement preparedStatement;
     private final UUID uuid;
-    private final Faker faker = new Faker();
-    final private Queue<Long> perfQueue;
+    private final Queue<Long> perfTimeQueue;
 
-    public DataReaderService(final String name,
-                             final CqlSession cqlSession,
+    public DataReaderService(final CqlSession cqlSession,
                              final PreparedStatement preparedStatement,
                              final UUID uuid,
                              final CountDownLatch startLatch,
                              final CountDownLatch endLatch,
-                             final Queue<Long> perfQueue) {
-        this.name = name;
+                             final Queue<Long> perfTimeQueue) {
+
         this.cqlSession = cqlSession;
         this.preparedStatement = preparedStatement;
         this.uuid = uuid;
         this.startLatch = startLatch;
         this.endLatch = endLatch;
-        this.perfQueue = perfQueue;
+        this.perfTimeQueue = perfTimeQueue;
 
     }
 
@@ -44,14 +42,14 @@ public class DataReaderService extends Thread {
             final BoundStatement statement = preparedStatement.bind().setUuid(0, uuid);
             startLatch.await();
             final Instant threadStartTime = Instant.now();
+            //loop until a result is found
             while (cqlSession.execute(statement).one() == null) {
-                //Thread.sleep(25);
+                Thread.sleep(1);
                 //System.out.println(uuid);
             }
-            ;//loop until a result is found
             final Instant threadEndTime = Instant.now();
             final Long diffTime = ChronoUnit.MILLIS.between(threadStartTime, threadEndTime);
-            perfQueue.add(diffTime);
+            perfTimeQueue.add(diffTime);
             //System.out.printf("[ %s ] writetime: %s, readtime:  %s, diff:%sms\n", getName(), threadStartTime, threadEndTime, diffTime);
             endLatch.countDown();
 

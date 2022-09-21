@@ -22,6 +22,8 @@ dependencies {
     implementation 'com.datastax.oss:java-driver-query-builder:4.14.1'
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
     implementation 'org.slf4j:slf4j-simple:2.0.1'
+    // https://mvnrepository.com/artifact/commons-cli/commons-cli
+    implementation 'commons-cli:commons-cli:1.5.0'
 
 
     implementation 'com.github.javafaker:javafaker:1.0.2'
@@ -30,3 +32,17 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes "Main-Class": "com.fedex.cassandra.perf.MultiDCPerfTest"
+    }
+
+    archiveClassifier = 'all'   //string gets appended to the jar name
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+     
+}
+
