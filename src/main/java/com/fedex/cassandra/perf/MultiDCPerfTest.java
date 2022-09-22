@@ -78,7 +78,7 @@ public class MultiDCPerfTest {
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount * 2);
         final PreparedStatement writePs = createWritePreparedStatement(keyspace, dc1CqlSession); //cql ps is threadsafe
         final PreparedStatement readPs = createReadPreparedStatement(keyspace, dc2CqlSession);
-
+        System.out.println("Init write threads");
         //write threads
         for (int i = 0; i < threadCount; i++) {
             final UUID uuid = Uuids.random();
@@ -89,6 +89,7 @@ public class MultiDCPerfTest {
                     startLatch,
                     endLatch)));
         }
+        System.out.println("Init read threads");
         //read threads
         for (int i = 0; i < threadCount; i++) {
             executorService.execute(new Thread(new DataReaderService(dc2CqlSession,
@@ -100,7 +101,7 @@ public class MultiDCPerfTest {
 
         try {
             //waiting on startLatch to finish countdown
-            System.out.println("All services are up, Application is starting now");
+            System.out.println("All service threads are up and running ..");
             startLatch.await();
             executorService.shutdown();
             //waiting for endLatch to finish countdown, so that we can close cqlSessions
