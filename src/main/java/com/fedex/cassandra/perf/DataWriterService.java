@@ -34,9 +34,10 @@ public class DataWriterService extends Thread {
     public void run() {
 
         try {
-            startLatch.countDown();
             final BoundStatement statement = bindStatement(preparedStatement);
+            startLatch.countDown(); //countdown and wait
             startLatch.await();
+            //System.out.printf("Wthread:%s  start:%s\n", getName(), Instant.now());
             cqlSession.execute(statement); //write
             endLatch.countDown();
         } catch (InterruptedException e) {

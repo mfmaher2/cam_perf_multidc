@@ -10,9 +10,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.projectlombok:lombok:1.18.24'
-    annotationProcessor 'org.projectlombok:lombok:1.18.24'
-
+    
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
@@ -24,8 +22,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-simple:2.0.1'
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
     implementation 'commons-cli:commons-cli:1.5.0'
-
-
+    //faker
     implementation 'com.github.javafaker:javafaker:1.0.2'
 }
 
@@ -38,11 +35,15 @@ task fatJar(type: Jar) {
     manifest {
         attributes "Main-Class": "com.fedex.cassandra.perf.MultiDCPerfTest"
     }
+    //gradle archive name : [archiveBaseName]-[archiveAppendix]-[archiveVersion]-[archiveClassifier].[archiveExtension]
+    archivesBaseName = "cam_perf_multidc"
+    archiveAppendix = ""
+    archiveVersion = ""
+    archiveClassifier = "all"
 
-    archiveClassifier = 'all'   //string gets appended to the jar name
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
-     
+
 }
 

@@ -23,6 +23,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 
 /**
+ * Multi data center performance tester
+ * Inserts data into DC1 and reads the same records from DC2 to test the latency of replication.
+ * <p>
  * using ExecutorService to manage threads
  */
 public class MultiDCPerfTest {
@@ -68,21 +71,20 @@ public class MultiDCPerfTest {
         dc1CqlSession.execute(truncateCql);
 
         //start write, read threads
-        final List<UUID> uuidList = new LinkedList<>();
-
+        final List<UUID> uuidList = new LinkedList<>(); //uuid list for read query
         final LinkedBlockingQueue<Long> perfTimeQueue = new LinkedBlockingQueue<>(threadCount); //bounded Q
-        final CountDownLatch startLatch = new CountDownLatch(threadCount * 2);
-        final CountDownLatch endLatch = new CountDownLatch(threadCount * 2);
+        final CountDownLatch startLatch = new CountDownLatch(threadCount * 2); //latch for thread start
+        final CountDownLatch endLatch = new CountDownLatch(threadCount * 2);   //thread end latch to wait for results and closing cql sessions
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount * 2);
-        final PreparedStatement writePreparedStatement = createWritePreparedStatement(keyspace, dc1CqlSession); //cql ps is threadsafe
-        final PreparedStatement readPreparedStatement = createReadPreparedStatement(keyspace, dc2CqlSession);
+        final PreparedStatement writePs = createWritePreparedStatement(keyspace, dc1CqlSession); //cql ps is threadsafe
+        final PreparedStatement readPs = createReadPreparedStatement(keyspace, dc2CqlSession);
 
         //write threads
         for (int i = 0; i < threadCount; i++) {
             final UUID uuid = Uuids.random();
             uuidList.add(uuid);
             executorService.execute(new Thread(new DataWriterService(dc1CqlSession,
-                    writePreparedStatement,
+                    writePs,
                     uuid,
                     startLatch,
                     endLatch)));
@@ -90,7 +92,7 @@ public class MultiDCPerfTest {
         //read threads
         for (int i = 0; i < threadCount; i++) {
             executorService.execute(new Thread(new DataReaderService(dc2CqlSession,
-                    readPreparedStatement,
+                    readPs,
                     uuidList.get(i),
                     startLatch,
                     endLatch, perfTimeQueue)));

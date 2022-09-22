@@ -38,10 +38,11 @@ public class DataReaderService extends Thread {
     @Override
     public void run() {
         try {
-            startLatch.countDown();
             final BoundStatement statement = preparedStatement.bind().setUuid(0, uuid);
+            startLatch.countDown();
             startLatch.await();
             final Instant threadStartTime = Instant.now();
+            //System.out.printf("Rthread:%s  start:%s\n", getName(), threadStartTime);
             //loop until a result is found
             while (cqlSession.execute(statement).one() == null) {
                 Thread.sleep(1);
