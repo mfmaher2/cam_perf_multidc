@@ -24,7 +24,7 @@
 
 `java -jar cam_perf_multidc-all.jar  com.fedex.cassandra.perf.MultiDCPerfTest -dc1 ~/config/dc1.conf -dc2 ~/config/dc2.conf -i 10`
 
-# without the providing the main program
+# without providing the main program
 
 `java -jar cam_perf_multidc-all.jar -dc1 ~/config/dc1.conf -dc2 ~/config/dc2.conf -i 10`
 
