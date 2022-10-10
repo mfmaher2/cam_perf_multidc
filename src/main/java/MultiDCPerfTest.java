@@ -7,6 +7,7 @@ import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.insert.Insert;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,11 +25,14 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 public class MultiDCPerfTest {
     public static void main(String[] args) {
 
-        final File dc1Config = new File("/Users/sjacob/projects/fedex/cam_perf_multidc/src/main/resources/dc1.conf");
+//        final File dc1Config = new File("/Users/sjacob/projects/fedex/cam_perf_multidc/src/main/resources/dc1.conf");
+        final File dc1Config = new File(Paths.get("src/main/resources/dc1.conf").toAbsolutePath().toString());
         final CqlSession dc1CqlSession = CqlSession.builder()
                 .withConfigLoader(DriverConfigLoader.fromFile(dc1Config))
                 .build();
-        final File dc2Config = new File("/Users/sjacob/projects/fedex/cam_perf_multidc/src/main/resources/dc2.conf");
+//        final File dc2Config = new File("/Users/sjacob/projects/fedex/cam_perf_multidc/src/main/resources/dc2.conf");
+        final File dc2Config = new File(Paths.get("src/main/resources/dc2.conf").toAbsolutePath().toString());
+
         final CqlSession dc2CqlSession = CqlSession.builder()
                 .withConfigLoader(DriverConfigLoader.fromFile(dc2Config))
                 .build();
